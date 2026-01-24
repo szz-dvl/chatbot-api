@@ -26,7 +26,7 @@ export class MilvusService {
 
   constructor(private readonly embeddingService: EmbeddingsService) {
     this.client = new MilvusClient({
-      address: "localhost:19530",
+      address: process.env.MILVUS_CONNECTION_STRING!,
     });
   }
 
