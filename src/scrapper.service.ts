@@ -21,7 +21,7 @@ export class ScrapperService {
       const candidate = DateTime
         .fromFormat(dateString.trim(), format)
         .toJSDate();
-        
+
       if (!isNaN(candidate.getTime())) {
         return candidate;
       }
@@ -51,6 +51,9 @@ export class ScrapperService {
         let title, body, link, date, img;
 
         if (imageElem) {
+          await imageElem.scrollIntoView();
+          await new Promise((resolve) => setTimeout(resolve, 100)) //Small delay for images to load
+
           img = await imageElem.evaluate((el) => el.getAttribute("src"));
         }
 

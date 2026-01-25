@@ -45,7 +45,7 @@ export class ChatbotService {
   ) {}
 
   private async getContext({ keyword, raw_input }: ToolQuery) {
-    // console.log("Tool", keyword, raw_input);
+    
     const searchResult = await this.milvusService.hybridSearch(
       keyword,
       raw_input,
@@ -55,12 +55,7 @@ export class ChatbotService {
       throw searchResult.val;
     }
 
-    const relevant = searchResult.val.results.map(({ link, text }) => {
-      return {
-        link,
-        text,
-      };
-    });
+    const relevant = searchResult.val.results;
 
     return { context: relevant };
   }

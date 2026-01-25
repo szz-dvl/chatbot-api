@@ -29,10 +29,35 @@ export class AdminController {
     const indexPageResult = await this.adminService.indexPage(page);
 
     if (indexPageResult.err) {
-      console.error(indexPageResult.val);
       throw new InternalServerErrorException();
     }
 
     return indexPageResult.val;
+  }
+
+  @Get("/recreate-index")
+  async recreateIndex() {
+    await this.adminService.recreateIndex();
+
+    return true;
+  }
+
+  @Get("/index-many/:page")
+  async indexMany(
+    @Param() { page }: IndexDto,
+  ) {
+    for (let p = 1; p <= page; p++) {
+      const indexPageResult = await this.adminService.indexPage(p);
+
+      if (indexPageResult.err) {
+        throw new InternalServerErrorException();
+      }
+
+      if (indexPageResult.val.repeated.length && !indexPageResult.val.indexed.length) {
+        return true
+      }
+    }
+
+    return true
   }
 }

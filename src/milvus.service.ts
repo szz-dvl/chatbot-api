@@ -12,11 +12,14 @@ import {
 } from "@zilliz/milvus2-sdk-node";
 import { Err, Ok, Result } from "ts-results";
 import { EmbeddingsService } from "./embeddings.service";
+import { ImagesService } from "./images.service";
 
 export type DbDoc = {
   text: string;
   link: string;
   text_dense: number[];
+  image: string;
+  image_dense: number[];
   published: number;
 };
 
@@ -24,7 +27,7 @@ export type DbDoc = {
 export class MilvusService {
   client: MilvusClient;
 
-  constructor(private readonly embeddingService: EmbeddingsService) {
+  constructor(private readonly embeddingService: EmbeddingsService, private readonly imagesService: ImagesService) {
     this.client = new MilvusClient({
       address: process.env.MILVUS_CONNECTION_STRING!,
     });
@@ -40,6 +43,16 @@ export class MilvusService {
         is_primary_key: true,
         autoID: false,
         max_length: 512,
+      },
+      {
+        name: "image",
+        data_type: DataType.VarChar,
+        max_length: 512,
+      },
+      {
+        name: "image_dense",
+        data_type: DataType.FloatVector,
+        dim: 512,
       },
       {
         name: "published",
@@ -74,20 +87,29 @@ export class MilvusService {
       },
     ];
 
-    const index_params = [{
-      field_name: "text_dense",
-      index_name: "text_dense_index",
-      index_type: "AUTOINDEX",
-      metric_type: "L2",
-    }, {
-      field_name: "text_sparse",
-      index_name: "text_sparse_index",
-      index_type: IndexType.SPARSE_INVERTED_INDEX,
-      metric_type: "BM25",
-      params: {
-        inverted_index_algo: "DAAT_MAXSCORE",
+    const index_params = [
+      {
+        field_name: "text_dense",
+        index_name: "text_dense_index",
+        index_type: "AUTOINDEX",
+        metric_type: "L2",
       },
-    }];
+      {
+        field_name: "image_dense",
+        index_name: "image_dense_index",
+        index_type: "AUTOINDEX",
+        metric_type: "COSINE",
+      },
+      {
+        field_name: "text_sparse",
+        index_name: "text_sparse_index",
+        index_type: IndexType.SPARSE_INVERTED_INDEX,
+        metric_type: "BM25",
+        params: {
+          inverted_index_algo: "DAAT_MAXSCORE",
+        },
+      },
+    ];
 
     try {
       await this.client.createCollection({
@@ -133,12 +155,20 @@ export class MilvusService {
     collection: string = "meneame",
   ): Promise<Result<MutationResult, Error>> {
     try {
+
+      const insertResult = await this.client.insert({
+        collection_name: collection,
+        data: docs,
+      });
+
+      if (insertResult.err_index.length) {
+        return Err(new Error("Error inserting items", { cause: insertResult }))
+      }
+
       return Ok(
-        await this.client.insert({
-          collection_name: collection,
-          data: docs,
-        }),
+        insertResult,
       );
+      
     } catch (err) {
       return Err(err);
     }
@@ -150,8 +180,15 @@ export class MilvusService {
   ) {
     const embeddings = await this.embeddingService.getEmbeddings(text);
 
-    if (embeddings.err)
-        return embeddings;
+    if (embeddings.err) {
+      return embeddings;
+    }
+
+    const visionEmbeddings = await this.imagesService.getQueryEmbeddings(query);
+
+    if (visionEmbeddings.err) {
+      return visionEmbeddings;
+    }
 
     const search_param_1 = {
       "data": embeddings.val,
@@ -163,6 +200,13 @@ export class MilvusService {
     const search_param_2 = {
       "data": query,
       "anns_field": "text_sparse",
+      "limit": 5,
+    };
+
+    const search_param_3 = {
+      "data": visionEmbeddings.val,
+      "anns_field": "image_dense",
+      "param": { "nprobe": 10 },
       "limit": 5,
     };
 
@@ -185,10 +229,10 @@ export class MilvusService {
       return Ok(
         await this.client.search({
           collection_name: collection,
-          data: [search_param_1, search_param_2],
+          data: [search_param_1, search_param_2, search_param_3],
           limit: 5,
           rerank: rerank,
-          output_fields: ["text", "link"],
+          output_fields: ["text", "link", "image"],
         }),
       );
     } catch (err) {
