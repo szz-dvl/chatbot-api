@@ -72,7 +72,7 @@ export class ChatbotService {
       model: this.model,
       messages,
       tools: this.tools,
-      think: true,
+      think: "medium",
     });
 
     messages.push({
@@ -100,7 +100,7 @@ export class ChatbotService {
           model: this.model,
           messages,
           tools: this.tools,
-          think: true,
+          think: "high",
           stream: true,
         }),
         historic: messages.slice(initialLen),

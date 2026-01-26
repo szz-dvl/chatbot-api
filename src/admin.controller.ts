@@ -6,9 +6,11 @@ import {
   Param,
   UseFilters,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { AdminFilter, AdminGuard } from "./admin.guard";
+import { TimeoutInterceptor } from "./timeout.interceptor";
 
 type IndexDto = {
   page: number;
@@ -23,6 +25,7 @@ export class AdminController {
   ) {}
 
   @Get("/index/:page")
+  @UseInterceptors(new TimeoutInterceptor())
   async indexPage(
     @Param() { page }: IndexDto,
   ) {
@@ -43,6 +46,7 @@ export class AdminController {
   }
 
   @Get("/index-many/:page")
+  @UseInterceptors(new TimeoutInterceptor())
   async indexMany(
     @Param() { page }: IndexDto,
   ) {

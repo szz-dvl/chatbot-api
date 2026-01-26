@@ -15,6 +15,7 @@ import { NoFilesInterceptor } from "@nestjs/platform-express";
 import { ConversationService } from "./conversation.service";
 import { pipeline } from "node:stream/promises";
 import type { Response } from "express";
+import { TimeoutInterceptor } from "./timeout.interceptor";
 
 class QuestionDto {
   question: string;
@@ -37,6 +38,7 @@ export class ChatbotController {
 
   @Post("/chatbot")
   @UseInterceptors(NoFilesInterceptor())
+  @UseInterceptors(new TimeoutInterceptor())
   async getAnswer(
     @Body() { question }: QuestionDto,
     @Headers() headers: Record<string, string>,
