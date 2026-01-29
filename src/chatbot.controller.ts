@@ -60,6 +60,7 @@ export class ChatbotController {
     const conversation = await this.conversationService.getOrCreateConversation(
       session,
     );
+
     const { stream, historic } = await this.chatbotService.converse(
       conversation,
       question,

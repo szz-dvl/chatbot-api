@@ -10,5 +10,6 @@ import { ImagesModule } from "./images.module";
   imports: [MilvusModule, ScrapperModule, EmbeddingsModule, ImagesModule],
   controllers: [AdminController],
   providers: [AdminService],
+  exports: [AdminService]
 })
 export class AdminModule {}

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { ConversationModel, Message } from "./conversation.model";
+import { Conversation, ConversationModel, Message } from "./conversation.model";
+import { DateTime, Duration } from "luxon";
 
 @Injectable()
 export class ConversationService {
@@ -12,9 +13,25 @@ export class ConversationService {
   }
 
   async getOrCreateConversation(session: string) {
-    const conversation = await ConversationModel.findOne({
-      session,
-    }, { _id: 0, __v: 0 });
+    const [conversation] = await ConversationModel.aggregate<Conversation>([
+      {
+        $match: {
+          session,
+        },
+      },
+      {
+        $unwind: "$messages",
+      },
+      {
+        $match: { "messages.role": { $ne: "tool" } },
+      },
+      {
+        $group: {
+          _id: "$session",
+          messages: { $push: "$messages" },
+        },
+      },
+    ], { _id: 0, __v: 0 });
 
     if (!conversation) {
       return await this._createConversation(session);
@@ -33,20 +50,24 @@ export class ConversationService {
   async getConversationContext(session: string) {
     const conversation = await ConversationModel.findOne({
       session,
-    });
+    }, { _id: 0, __v: 0 });
 
     if (conversation) {
-
-      const candidate = conversation.messages.reverse()[1]
+      const candidate = conversation.messages.reverse()[1];
 
       if (candidate.role == "tool") {
-        return JSON.parse(candidate.content)
+        return JSON.parse(candidate.content);
       }
-
     }
 
     return {
-      context: []
-    }
+      context: [],
+    };
+  }
+
+  async deleteOld() {
+    return await ConversationModel.deleteMany({
+      created: { $gt: DateTime.now().minus(Duration.fromObject({ days: 3 })).toJSDate() },
+    }, { _id: 0, __v: 0 });
   }
 }

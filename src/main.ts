@@ -3,13 +3,10 @@ import { AppModule } from "./app.module";
 import { config } from "dotenv";
 import mongoose from "mongoose";
 import { Agent, setGlobalDispatcher } from "undici";
-import { MilvusClient } from "@zilliz/milvus2-sdk-node";
+import { CronService } from "./cron.service";
+import { MilvusService } from "./milvus.service";
 
 config();
-
-const milvus = new MilvusClient({
-  address: process.env.MILVUS_CONNECTION_STRING!,
-});
 
 async function bootstrap() {
   setGlobalDispatcher(
@@ -19,15 +16,18 @@ async function bootstrap() {
     }),
   );
 
-  await milvus.connectPromise;
   await mongoose.connect(process.env.MONGO_CONNECTION_STRING!, {
     dbName: process.env.MONGO_DB_NAME,
   });
+
   const app = await NestFactory.create(AppModule, {
     bodyParser: true,
     rawBody: true,
-    cors: true,
+    cors: true
   });
+
+  await app.get(MilvusService).client.connectPromise
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

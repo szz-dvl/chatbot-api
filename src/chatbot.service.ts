@@ -23,10 +23,10 @@ export class ChatbotService {
       type: "function";
       function: {
         name: "get_context";
-        description:
-          `
+        description: `
             Retrieve information from the database given a "keyword" parameter and the user "raw_input".
             You must use this function whenever you need to fetch present, real-time data on a particular subject.
+            Use this function as much as possible.
           `;
         parameters: {
           type: "object";
@@ -51,7 +51,10 @@ export class ChatbotService {
       type: "function";
       function: {
         name: "get_latest_entries";
-        description: `Retrieve the latest entries from the database. You must use this function whenever you need to get a collection of recent news into your context."`;
+        description: `
+          Retrieve the latest entries from the database.
+          You must use this tool whenever present information is needed.
+        `;
         parameters: {};
       };
     },
@@ -75,17 +78,16 @@ export class ChatbotService {
     //   };
     // },
   ];
-  private model = "qwen3"//"mistral-nemo:12b-instruct-2407-q5_K_M"; //"llama3.2:3b-instruct-q5_1";//"llama3.1:8b-instruct-q5_1"
+  private model = "qwen3"; //"mistral-nemo:12b-instruct-2407-q5_K_M"; //"llama3.2:3b-instruct-q5_1";//"llama3.1:8b-instruct-q5_1"
 
   constructor(
     private readonly milvusService: MilvusService,
   ) {}
 
   private async getContext({ keyword, raw_input }: GetContextToolQuery) {
-    
     const searchResult = await this.milvusService.hybridSearch(
       keyword,
-      raw_input,
+      raw_input.includes(keyword) ? raw_input : keyword,
     );
 
     if (searchResult.err) {
@@ -129,45 +131,42 @@ export class ChatbotService {
         {
           role: "system",
           content: `
-              You are an agent equipped with tools. Your task is to decide if there is a need for a tool call or not.
-              Your tools give you access to a local database containing information on many topics like news, recipes, satires, sports, politics, etc. Use them as much as possible.
-
-              To use a tool your message must contain one of the following structures it is imperative that your answers only contains valid JSON data:
+              You are a Retrieval-Augmented Generation (RAG) system equipped with tools. Your task is to decide if there is a need for a tool call or not.
+              Your tools give you access to a local database containing information on many topics like news, recipes, satires, sports, politics, etc.
+              
+              To use a tool your answer must match one of the following JSON structures:
               {
-                tool_call: {
-                  name: "get_context"
-                  arguments: { keyword: $keyword, raw_input: $raw_input }
-                  use_case: "You must use this function whenever you need to fetch present data on a particular topic (news, recipes, satires, sports, politics, etc). Always reinforce you answers with this function."
+                "tool_call": {
+                  "name": "get_context"
+                  "arguments": { "keyword": $keyword, "raw_input": $raw_input }
+                  "use_case": "You must use this function whenever the user requests information about a particular topic (news, recipes, satires, sports, politics, etc). Use this function as often as you can."
                 }
               } or
               {
-                tool_call: {
-                  name: "get_latest_entries"
-                  arguments: { }
-                  use_case: "You must use this function whenever the user requests the latest news. Use this function regardless of previous context."
-                }
-              }
-
-              Always answer in the same language the user asks. Try to grow your context as much as possible. Use the your tools as much as possible.
-
-              If you need to answer the user, no need for a tool call, use the following structure:
-
-              {
-                tool_call: {
-                  name: "answer_to_user"
-                  arguments: { response: $response }
+                "tool_call": {
+                  "name": "get_latest_entries"
+                  "arguments": { }
+                  "use_case": "You must use this function whenever the user requests the latest news without any particular topic. Use this function regardless of previous context."
                 }
               }
               
-              Never answer you don't have information without fetching information first. 
-              
+              Use your tools as much as possible, always validate your knowledge with the information in the local database. Don't worry about a making your context bigger.
+              Never answer you don't have information, try to grow your context first. Never use a tool_call and answer at the same time. Prioritize tool calls.
+
               The current year is ${new Date().getFullYear()}
+              Always answer in the same language the user asks. 
           `,
         },
         ...messages,
       ],
       tools: this.tools,
       think: true,
+      options: {
+        temperature: 0.6,
+        top_p: 0.95,
+        repeat_penalty: 1,
+        top_k: 20,
+      },
     });
 
     console.log(response);
@@ -175,19 +174,15 @@ export class ChatbotService {
     let tool_call;
 
     try {
-      
       const { tool_call: tc } = JSON.parse(response.message.content.trim());
       tool_call = tc;
-
-    } catch(err) {
-
+    } catch (err) {
       console.error(err);
 
       tool_call = {
         name: "answer_to_user",
-        arguments: { response: response.message.content.trim() }
-      }
-
+        arguments: { response: response.message.content.trim() },
+      };
     }
 
     let result: { context: DbResult[] } | null = null;
@@ -237,9 +232,9 @@ export class ChatbotService {
             {
               role: "system",
               content: `
-                Your are a helpfull assistant tasked with chatting with a human user.
+                You are a Retrieval-Augmented Generation (RAG) system equipped with tools. Your task is to chat with a human.
                 You will receive context from tools as messages with the "tool" role. When a "tool" message is received you must elaborate an answer based in the context provided.
-                Only use the context that is relevant to the user question. And try to use the context provided as much as possible. The context is you source of truth.
+                Only use the context that is relevant to the user question. And try to use the context provided as much as possible. The context is you source of truth. Never criticize your context.
                 If the context is not relevant at all, just say you don't have information.
                 The current year is ${new Date().getFullYear()}
 
@@ -249,7 +244,13 @@ export class ChatbotService {
             ...messages,
           ],
           stream: true,
-          think: true
+          think: true,
+          options: {
+            temperature: 0.6,
+            top_p: 0.95,
+            repeat_penalty: 1,
+            top_k: 20,
+          },
         }),
         historic: messages.slice(initialLen),
       };
