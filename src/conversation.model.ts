@@ -1,5 +1,13 @@
 import { prop, getModelForClass, Ref } from '@typegoose/typegoose';
 
+class ToolCall {
+    @prop({ required: true })
+    public name: string;
+
+    @prop({ required: true })
+    public arguments: { [key: string]: any; };
+}
+
 export class Message {
     @prop({ required: true })
     public role: string;
@@ -9,6 +17,9 @@ export class Message {
 
     @prop()
     public tool_name?: string;
+
+    @prop()
+    public tool_call?: ToolCall;
 }
 
 export class Conversation {

@@ -15,7 +15,7 @@ export type ScrappedDoc = {
 export class ScrapperService {
   private parseDate(
     dateString: string,
-    formats: string[] = ["HH:mm", "dd/MM HH:mm"],
+    formats: string[] = ["dd/MM/yyyy HH:mm", "dd/MM HH:mm", "HH:mm"],
   ) {
     for (const format of formats) {
       const candidate = DateTime
@@ -37,6 +37,7 @@ export class ScrapperService {
       const summary: Array<ScrappedDoc> = [];
       const browser = await launch();
       const page = await browser.newPage();
+      page.setDefaultNavigationTimeout(0);
 
       await page.goto(`https://www.meneame.net/?page=${pageNum}`);
 
@@ -52,7 +53,7 @@ export class ScrapperService {
 
         if (imageElem) {
           await imageElem.scrollIntoView();
-          await new Promise((resolve) => setTimeout(resolve, 100)) //Small delay for images to load
+          await new Promise((resolve) => setTimeout(resolve, 100)); //Small delay for images to load
 
           img = await imageElem.evaluate((el) => el.getAttribute("src"));
         }
@@ -84,17 +85,13 @@ export class ScrapperService {
         }
 
         if (publishedElem) {
-          const spans = await publishedElem.$$("span");
+          const spans = await publishedElem.$$("span.ts")
+          const span = spans.at(0);
 
-          let count = 0;
-          for (const span of spans) {
-            count++;
-
-            if (count == 2) {
-              const content = await span.evaluate((el) => el.textContent);
-              if (content) {
-                date = this.parseDate(content);
-              }
+          if (span) {
+            const content = await span.evaluate((el) => el.textContent);
+            if (content) {
+              date = this.parseDate(content);
             }
           }
         }

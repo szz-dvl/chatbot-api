@@ -13,6 +13,7 @@ import {
 import { Err, Ok, Result } from "ts-results";
 import { EmbeddingsService } from "./embeddings.service";
 import { ImagesService } from "./images.service";
+import { DateTime, Duration } from "luxon";
 
 export type DbDoc = {
   text: string;
@@ -27,7 +28,10 @@ export type DbDoc = {
 export class MilvusService {
   client: MilvusClient;
 
-  constructor(private readonly embeddingService: EmbeddingsService, private readonly imagesService: ImagesService) {
+  constructor(
+    private readonly embeddingService: EmbeddingsService,
+    private readonly imagesService: ImagesService,
+  ) {
     this.client = new MilvusClient({
       address: process.env.MILVUS_CONNECTION_STRING!,
     });
@@ -56,7 +60,7 @@ export class MilvusService {
       },
       {
         name: "published",
-        data_type: DataType.Int32,
+        data_type: DataType.Int64,
       },
       {
         name: "text_dense",
@@ -155,20 +159,18 @@ export class MilvusService {
     collection: string = "meneame",
   ): Promise<Result<MutationResult, Error>> {
     try {
-
       const insertResult = await this.client.insert({
         collection_name: collection,
         data: docs,
       });
 
       if (insertResult.err_index.length) {
-        return Err(new Error("Error inserting items", { cause: insertResult }))
+        return Err(new Error("Error inserting items", { cause: insertResult }));
       }
 
       return Ok(
         insertResult,
       );
-      
     } catch (err) {
       return Err(err);
     }
@@ -232,7 +234,7 @@ export class MilvusService {
           data: [search_param_1, search_param_2, search_param_3],
           limit: 5,
           rerank: rerank,
-          output_fields: ["text", "link", "image"],
+          output_fields: ["text", "link", "image", "published"],
         }),
       );
     } catch (err) {
@@ -255,6 +257,27 @@ export class MilvusService {
           ids: [link],
           limit: 1,
           output_fields: ["link"],
+        }),
+      );
+    } catch (err) {
+      return Err(err as Error);
+    }
+  }
+
+  async listCollection(hours: number = 12, collection: string = "meneame") {
+    try {
+      await this.client.loadCollection({
+        collection_name: collection,
+      });
+
+      const before = DateTime.now().minus(Duration.fromObject({hours})).toJSDate().getTime();
+
+      return Ok(
+        await this.client.query({
+          collection_name: collection,
+          expr: `published >= ${before}`,
+          limit: 10,
+          output_fields: ["text", "link", "image", "published"],
         }),
       );
     } catch (err) {

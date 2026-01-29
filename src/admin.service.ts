@@ -5,7 +5,7 @@ import { Ok, Result } from "ts-results";
 import { EmbeddingsService } from "./embeddings.service";
 import { ImagesService } from "./images.service";
 
-type IndexResult = {
+export type IndexResult = {
   indexed: string[];
   repeated: string[];
   errored: string[];
