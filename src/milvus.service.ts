@@ -6,8 +6,6 @@ import {
   MilvusClient,
   MutationResult,
   QueryResults,
-  SearchReq,
-  SearchResults,
   ShowCollectionsResponse,
 } from "@zilliz/milvus2-sdk-node";
 import { Err, Ok, Result } from "ts-results";
@@ -196,20 +194,20 @@ export class MilvusService {
       "data": embeddings.val,
       "anns_field": "text_dense",
       "param": { "nprobe": 10 },
-      "limit": 5,
+      "limit": 10,
     };
 
     const search_param_2 = {
       "data": query,
       "anns_field": "text_sparse",
-      "limit": 5,
+      "limit": 10,
     };
 
     const search_param_3 = {
       "data": visionEmbeddings.val,
       "anns_field": "image_dense",
       "param": { "nprobe": 10 },
-      "limit": 5,
+      "limit": 10,
     };
 
     const rerank = {
@@ -222,6 +220,18 @@ export class MilvusService {
         "k": 60,
       },
     };
+
+    // const rerank = {
+    //   name: "weight",
+    //   description: "weights rerank strategy",
+    //   type: FunctionType.RERANK,
+    //   input_field_names: [],
+    //   params: {
+    //     "reranker": "weighted",
+    //     "weights": [.40, .45, .15],
+    //     "norm_score": true
+    //   },
+    // };
 
     try {
       await this.client.loadCollection({

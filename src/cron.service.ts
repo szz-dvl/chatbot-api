@@ -9,7 +9,7 @@ export class CronService {
   private readonly jobs: CronJob[] = [];
   constructor(private readonly adminService: AdminService, private readonly conversationService: ConversationService) {
     //Every ten minutes at second 00
-    this.jobs.push(new CronJob("0 */10 * * * *", this.getHead.bind(this), null, true, 'Europe/Madrid'));
+    this.jobs.push(new CronJob("0 */1 * * * *", this.getHead.bind(this), null, true, 'Europe/Madrid'));
     //Once a day at 00:00:00
     this.jobs.push(new CronJob("0 0 0 */1 * *", this.cleanConversations.bind(this), null, true, 'Europe/Madrid'));
   }
