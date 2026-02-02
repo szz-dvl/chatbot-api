@@ -27,11 +27,10 @@ describe("ConversationService", () => {
   describe("root", () => {
     it("should return conversations without tool messages", async () => {
       const response = await conversationService.getOrCreateConversation(
-        "d5b8cc02-c616-4238-8391-615840361412",
+        "c716788d-9366-4a69-8f7d-e185f11a9488",
       );
-
-      expect(response.messages.filter(({ role }) => role === "tool"))
+      expect(response.messages.filter(({ role, tool_call }) => role === "tool" || typeof tool_call !== "undefined"))
         .toHaveLength(0);
-    });
+     });
   });
 });

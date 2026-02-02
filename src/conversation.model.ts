@@ -1,4 +1,4 @@
-import { prop, getModelForClass, Ref } from '@typegoose/typegoose';
+import { prop, getModelForClass, Ref, modelOptions, Severity } from '@typegoose/typegoose';
 
 class ToolCall {
     @prop({ required: true })
@@ -22,9 +22,10 @@ export class Message {
     public tool_call?: ToolCall;
 }
 
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Conversation {
 
-    @prop({ required: true })
+    @prop({ required: true, unique: true })
     public session: string;
 
     @prop({ required: true })
@@ -36,3 +37,7 @@ export class Conversation {
 }
 
 export const ConversationModel = getModelForClass(Conversation);
+ConversationModel.on("index", (err) => {
+    if (err)
+        console.error(err);
+});
