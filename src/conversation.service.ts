@@ -13,25 +13,27 @@ export class ConversationService {
   }
 
   async getOrCreateConversation(session: string) {
-    const [conversation] = await ConversationModel.aggregate<Conversation>([
-      {
-        $match: {
-          session,
-        },
-      },
-      {
-        $unwind: "$messages",
-      },
-      {
-        $match: { "messages.role": { $ne: "tool" } },
-      },
-      {
-        $group: {
-          _id: "$session",
-          messages: { $push: "$messages" },
-        },
-      },
-    ], { _id: 0, __v: 0 });
+    // const [conversation] = await ConversationModel.aggregate<Conversation>([
+    //   {
+    //     $match: {
+    //       session,
+    //     },
+    //   },
+    //   {
+    //     $unwind: "$messages",
+    //   },
+    //   {
+    //     $match: { "messages.role": { $ne: "tool" } },
+    //   },
+    //   {
+    //     $group: {
+    //       _id: "$session",
+    //       messages: { $push: "$messages" },
+    //     },
+    //   },
+    // ], { _id: 0, __v: 0 });
+
+    const conversation = await ConversationModel.findOne({ session }, { _id: 0, __v: 0 })
 
     if (!conversation) {
       return await this._createConversation(session);

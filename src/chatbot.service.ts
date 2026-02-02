@@ -22,7 +22,7 @@ export class ChatbotService {
     {
       type: "function";
       function: {
-        name: "get_context";
+        name: "get_information";
         description: `
             Retrieve information from the database given a "keyword" parameter and the user "raw_input".
             You must use this function whenever you need to fetch present, real-time data on a particular subject.
@@ -78,7 +78,7 @@ export class ChatbotService {
     //   };
     // },
   ];
-  private model = "qwen3"; //"mistral-nemo:12b-instruct-2407-q5_K_M"; //"llama3.2:3b-instruct-q5_1";//"llama3.1:8b-instruct-q5_1"
+  private model = "qwen3:14b";//, "qwen3"; //"mistral-nemo:12b-instruct-2407-q5_K_M"; //"llama3.2:3b-instruct-q5_1";//"llama3.1:8b-instruct-q5_1"
 
   constructor(
     private readonly milvusService: MilvusService,
@@ -96,9 +96,9 @@ export class ChatbotService {
 
     const relevant = searchResult.val.results as unknown as DbResult[];
 
-    relevant.sort(({ published: pA }, { published: pB }) =>
-      parseInt(pB) - parseInt(pA)
-    );
+    // relevant.sort(({ published: pA }, { published: pB }) =>
+    //   parseInt(pB) - parseInt(pA)
+    // );
 
     return { context: relevant };
   }
@@ -131,15 +131,15 @@ export class ChatbotService {
         {
           role: "system",
           content: `
-              You are a Retrieval-Augmented Generation (RAG) system equipped with tools. Your task is to decide if there is a need for a tool call or not.
+              You are a Retrieval-Augmented Generation (RAG) system equipped with tools. Your task is to decide to use a tool call or not. Do not expect the user to request a tool_call. You must help the user by using tool_calls.
               Your tools give you access to a local database containing information on many topics like news, recipes, satires, sports, politics, etc.
               
               To use a tool your answer must match one of the following JSON structures:
               {
                 "tool_call": {
-                  "name": "get_context"
+                  "name": "get_information"
                   "arguments": { "keyword": $keyword, "raw_input": $raw_input }
-                  "use_case": "You must use this function whenever the user requests information about a particular topic (news, recipes, satires, sports, politics, etc). Use this function as often as you can."
+                  "use_case": "You must use this function whenever the user requests information about a particular topic (news, recipes, satires, sports, politics, etc). Use this function when there is not enough data in your context. Use this function as often as you can."
                 }
               } or
               {
@@ -150,7 +150,7 @@ export class ChatbotService {
                 }
               }
               
-              Use your tools as much as possible, always validate your knowledge with the information in the local database. Don't worry about a making your context bigger.
+              Always use your tools, always validate your knowledge with the information in the local database. Don't worry about a making your context bigger.
               Never answer you don't have information, try to grow your context first. Never use a tool_call and answer at the same time. Prioritize tool calls.
 
               The current year is ${new Date().getFullYear()}
@@ -188,7 +188,7 @@ export class ChatbotService {
     let result: { context: DbResult[] } | null = null;
 
     switch (tool_call.name) {
-      case "get_context":
+      case "get_information":
         {
           result = await this.getContext(tool_call.arguments);
         }
@@ -234,7 +234,7 @@ export class ChatbotService {
               content: `
                 You are a Retrieval-Augmented Generation (RAG) system equipped with tools. Your task is to chat with a human.
                 You will receive context from tools as messages with the "tool" role. When a "tool" message is received you must elaborate an answer based in the context provided.
-                Only use the context that is relevant to the user question. And try to use the context provided as much as possible. The context is you source of truth. Never criticize your context.
+                Only use the context that is relevant to the user question. The context is you source of truth. Never criticize your context.
                 If the context is not relevant at all, just say you don't have information.
                 The current year is ${new Date().getFullYear()}
 
