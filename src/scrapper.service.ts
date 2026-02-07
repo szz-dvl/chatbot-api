@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { launch } from "puppeteer";
 import { Err, Ok, Result } from "ts-results";
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 
 export type ScrappedDoc = {
   title?: string | null;
@@ -13,7 +13,7 @@ export type ScrappedDoc = {
 
 @Injectable()
 export class ScrapperService {
-  private parseDate(
+  parseDate(
     dateString: string,
     formats: string[] = ["dd/MM/yyyy HH:mm", "dd/MM HH:mm", "HH:mm"],
   ) {
@@ -25,6 +25,14 @@ export class ScrapperService {
       if (!isNaN(candidate.getTime())) {
         return candidate;
       }
+    }
+
+    const regex = /hace\s(\d{1,2})\smin/;
+    const res = regex.exec(dateString);
+
+    if (res) {
+      const minutes = parseInt(res[res.length - 1])
+      return DateTime.now().minus(Duration.fromObject({ minutes })).toJSDate();
     }
 
     return new Date("Invalid Date");
@@ -91,7 +99,7 @@ export class ScrapperService {
           if (span) {
             const content = await span.evaluate((el) => el.textContent);
             if (content) {
-              date = this.parseDate(content);
+              date = this.parseDate(content.trim());
             }
           }
         }

@@ -116,8 +116,8 @@ export class MilvusService {
     try {
       await this.client.createCollection({
         collection_name: collection,
-        fields: fields,
-        index_params: index_params,
+        fields,
+        index_params,
         functions,
       });
 
@@ -220,18 +220,6 @@ export class MilvusService {
         "k": 60,
       },
     };
-
-    // const rerank = {
-    //   name: "weight",
-    //   description: "weights rerank strategy",
-    //   type: FunctionType.RERANK,
-    //   input_field_names: [],
-    //   params: {
-    //     "reranker": "weighted",
-    //     "weights": [.40, .45, .15],
-    //     "norm_score": true
-    //   },
-    // };
 
     try {
       await this.client.loadCollection({

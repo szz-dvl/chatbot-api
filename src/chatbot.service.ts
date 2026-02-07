@@ -152,6 +152,7 @@ export class ChatbotService {
               
               Always use your tools, always validate your knowledge with the information in the local database. Don't worry about a making your context bigger.
               Never answer you don't have information, try to grow your context first. Never use a tool_call and answer at the same time. Prioritize tool calls.
+              Never mention your tools to the user. Do not request permission to use your tools, use your tools as much as possible.
 
               The current year is ${new Date().getFullYear()}
               Always answer in the same language the user asks. 
