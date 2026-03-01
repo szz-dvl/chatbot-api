@@ -9,6 +9,7 @@ export class EmbeddingsService {
     this.embeddings = new OllamaEmbeddings({
       model: "bge-m3",
       dimensions: 1024,
+      baseUrl: process.env.OLLAMA_HOST
     });
   }
   async getEmbeddings(text: string): Promise<Result<number[], Error>> {

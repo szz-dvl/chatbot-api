@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { MilvusService } from "./milvus.service";
-import ollama from "ollama";
+import { Ollama } from "ollama";
 import { Conversation } from "./conversation.model";
 import { inspect } from "node:util";
 
@@ -79,10 +79,13 @@ export class ChatbotService {
     // },
   ];
   private model = "qwen3:14b";//, "qwen3"; //"mistral-nemo:12b-instruct-2407-q5_K_M"; //"llama3.2:3b-instruct-q5_1";//"llama3.1:8b-instruct-q5_1"
+  private ollama: Ollama
 
   constructor(
     private readonly milvusService: MilvusService,
-  ) {}
+  ) {
+    this.ollama = new Ollama({ host: process.env.OLLAMA_HOST })
+  }
 
   private async getContext({ keyword, raw_input }: GetContextToolQuery) {
     const searchResult = await this.milvusService.hybridSearch(
@@ -125,7 +128,7 @@ export class ChatbotService {
       content: question,
     });
 
-    const response = await ollama.chat({
+    const response = await this.ollama.chat({
       model: this.model,
       messages: [
         {
@@ -227,7 +230,7 @@ export class ChatbotService {
       ]);
 
       return {
-        stream: await ollama.chat({
+        stream: await this.ollama.chat({
           model: this.model,
           messages: [
             {
