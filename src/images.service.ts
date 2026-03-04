@@ -31,12 +31,12 @@ export class ImagesService {
     // Cargar modelos de visión y texto
     this.imageEmbeddings = await CLIPVisionModelWithProjection.from_pretrained(
       this.modelId,
-      {...options, cache_dir: './models_cache'}
+      {...options, cache_dir: './models_cache/clip_vision'}
     );
 
     this.textEmbeddings = await CLIPTextModelWithProjection.from_pretrained(
       this.modelId,
-      options
+      {...options, cache_dir: './models_cache/clip_text'}
     );
   }
 

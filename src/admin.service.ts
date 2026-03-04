@@ -37,7 +37,7 @@ export class AdminService {
 
     for (const scrapped of summaryResult.val) {
       const existsResult = await this.milvusService.searchById(scrapped.link!);
-
+ 
       if (existsResult.err) {
         result.errored.push(scrapped.link!);
         continue;
