@@ -10,7 +10,7 @@ services:
       - VIRTUAL_HOST=meneame.bot
     depends_on:
       mongo:
-          condition: service_started
+          condition: service_healthy
       milvus:
           condition: service_healthy
 
@@ -58,7 +58,7 @@ services:
       retries: 3
 
   milvus:
-    container_name: milvus-standalone
+    container_name: milvus
     image: milvusdb/milvus:v2.6.11
     command: ["milvus", "run", "standalone"]
     security_opt:
@@ -87,6 +87,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: c3feaab1fa906cba0e80e2ebaa433278
+    healthcheck:
+      test: ["CMD", "mongostat", "-u", 'root', "-n", "1", "-p", "c3feaab1fa906cba0e80e2ebaa433278", "mongodb://localhost:27017/?authSource=admin"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   ollama:
     image: ollama/ollama:latest
