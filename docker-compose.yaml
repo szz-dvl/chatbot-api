@@ -23,6 +23,20 @@ services:
       - 80:80
       - 443:443
     volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/nginx/certs:/etc/nginx/certs:ro
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  letsencrypt:
+    restart: always
+    hostname: letsencrypt
+    container_name: letsencrypt
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/nginx/certs:/etc/nginx/certs:rw
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
   etcd:
@@ -125,6 +139,9 @@ services:
       - "${DOCKER_VOLUME_DIRECTORY:-.}/volumes/registry/certs:/certs:ro"
       - "${DOCKER_VOLUME_DIRECTORY:-.}/volumes/registry/conf:/etc/docker/registry:ro"
       - "${DOCKER_VOLUME_DIRECTORY:-.}/volumes/registry/storage:/var/lib/registry:rw"
+volumes:
+  vhost:
+  html: 
 
 networks:
   default:
