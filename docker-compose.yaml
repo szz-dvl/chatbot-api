@@ -86,9 +86,9 @@ services:
     image: mongo:noble
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: c3feaab1fa906cba0e80e2ebaa433278
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
     healthcheck:
-      test: ["CMD", "mongostat", "-u", 'root', "-n", "1", "-p", "c3feaab1fa906cba0e80e2ebaa433278", "mongodb://localhost:27017/?authSource=admin"]
+      test: ["CMD", "mongostat", "-u", 'root', "-n", "1", "-p", "${MONGO_DB_PASSWORD}", "mongodb://localhost:27017/?authSource=admin"]
       interval: 30s
       timeout: 10s
       retries: 3
