@@ -51,7 +51,8 @@ COPY ./models_cache ./models_cache
 
 COPY ./dist/ ./
 
-COPY ./.env.prod ./.env
+ARG ENV=./.env
+COPY $ENV ./.env
 
 RUN chown -R node:node /app
 

@@ -1,23 +1,24 @@
 import { Injectable } from "@nestjs/common";
-import { OllamaEmbeddings } from "@langchain/ollama";
 import { Err, Ok, Result } from "ts-results";
+import { Ollama } from "ollama";
 
 @Injectable()
 export class EmbeddingsService {
-  private embeddings: OllamaEmbeddings;
+  private ollama: Ollama;
+
   constructor() {
-    this.embeddings = new OllamaEmbeddings({
-      model: process.env.OLLAMA_EMBEDDINGS,
-      dimensions: 1024,
-      baseUrl: process.env.OLLAMA_HOST
-    });
+    this.ollama = new Ollama({ host: process.env.OLLAMA_HOST })
   }
+
   async getEmbeddings(text: string): Promise<Result<number[], Error>> {
     try {
+      const { embeddings } = await this.ollama.embed({
+        model: process.env.OLLAMA_EMBEDDINGS!,
+        input: text
+      })
+
       return Ok(
-        await this.embeddings.embedQuery(
-          text,
-        ),
+        embeddings[0]
       );
     } catch (err) {
       return Err(err as Error);

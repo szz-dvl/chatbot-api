@@ -88,6 +88,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/mongo:/data/db
     healthcheck:
       test: ["CMD", "mongostat", "-u", 'root', "-n", "1", "-p", "${MONGO_DB_PASSWORD}", "mongodb://localhost:27017/?authSource=admin"]
       interval: 30s
@@ -115,10 +117,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-volumes:
-  vhost:
-  html: 
 
 networks:
   default:

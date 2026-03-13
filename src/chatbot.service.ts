@@ -58,27 +58,8 @@ export class ChatbotService {
         parameters: {};
       };
     },
-    // {
-    //   type: "function";
-    //   function: {
-    //     name: "answer_to_user";
-    //     description: `Answer to the user". You must use this function whenever a response can be sent to the user.`;
-    //     parameters: {
-    //       type: "object";
-    //       description: `Object containing the MANDATORY "content" parameter`;
-    //       required: ["response"];
-    //       items: ["response"];
-    //       properties: {
-    //         response: {
-    //           type: "string";
-    //           description: "Content of the answer to send to the user";
-    //         };
-    //       };
-    //     };
-    //   };
-    // },
   ];
-  private model = "qwen3:14b";//, "qwen3"; //"mistral-nemo:12b-instruct-2407-q5_K_M"; //"llama3.2:3b-instruct-q5_1";//"llama3.1:8b-instruct-q5_1"
+  private model = "qwen3:14b";
   private ollama: Ollama
 
   constructor(
@@ -98,10 +79,6 @@ export class ChatbotService {
     }
 
     const relevant = searchResult.val.results as unknown as DbResult[];
-
-    // relevant.sort(({ published: pA }, { published: pB }) =>
-    //   parseInt(pB) - parseInt(pA)
-    // );
 
     return { context: relevant };
   }
@@ -173,16 +150,12 @@ export class ChatbotService {
       },
     });
 
-    console.log(response);
-
     let tool_call;
 
     try {
       const { tool_call: tc } = JSON.parse(response.message.content.trim());
       tool_call = tc;
     } catch (err) {
-      console.error(err);
-
       tool_call = {
         name: "answer_to_user",
         arguments: { response: response.message.content.trim() },

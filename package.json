@@ -20,9 +20,7 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
   },
   "dependencies": {
-    "@huggingface/inference": "^4.13.10",
-    "@langchain/core": "^1.1.16",
-    "@langchain/ollama": "^1.2.5",
+    "@huggingface/inference": "^4.13.10", 
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.1.12",

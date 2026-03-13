@@ -118,6 +118,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_DB_PASSWORD}
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/mongo:/data/db:rw
     healthcheck:
       test: ["CMD", "mongostat", "-u", 'root', "-n", "1", "-p", "${MONGO_DB_PASSWORD}", "mongodb://localhost:27017/?authSource=admin"]
       interval: 30s
@@ -130,7 +132,7 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama:rw
     environment:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_ORIGINS=*
