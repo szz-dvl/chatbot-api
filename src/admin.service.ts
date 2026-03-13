@@ -33,12 +33,15 @@ export class AdminService {
       return summaryResult;
     }
 
+    console.log(summaryResult)
+    
     const dbDocs: DbDoc[] = [];
 
     for (const scrapped of summaryResult.val) {
       const existsResult = await this.milvusService.searchById(scrapped.link!);
  
       if (existsResult.err) {
+        console.error("Exists: ", existsResult.val)
         result.errored.push(scrapped.link!);
         continue;
       }
@@ -52,6 +55,7 @@ export class AdminService {
       const embeddings = await this.embeddingsService.getEmbeddings(text);
 
       if (embeddings.err) {
+        console.error("Embeddings: ", embeddings.val)
         result.errored.push(scrapped.link!);
         continue;
       }
@@ -63,6 +67,7 @@ export class AdminService {
         );
 
         if (imageEmbeddings.err) {
+          console.error("Image: ", imageEmbeddings.val)
           result.errored.push(scrapped.link!);
           continue;
         }
@@ -93,6 +98,6 @@ export class AdminService {
   }
 
   async recreateIndex() {
-    await this.milvusService.createCollection("meneame", true)
+    return await this.milvusService.createCollection("meneame", true)
   }
 }

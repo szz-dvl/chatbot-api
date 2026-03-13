@@ -3,16 +3,20 @@ services:
     container_name: meneamebot
     hostname: meneamebot
     restart: always
-    build: .
+    image: registry.meneame.bot:5000/meneamebot:v6
     cap_add:
       - SYS_ADMIN
     environment:
-      - VIRTUAL_HOST=meneame.bot
+      - VIRTUAL_HOST=meneame.bot,www.meneame.bot
+      - LETSENCRYPT_HOST=meneame.bot,www.meneame.bot
+      - LETSENCRYPT_EMAIL=santiaguzz@gmail.com
     depends_on:
       mongo:
           condition: service_healthy
       milvus:
           condition: service_healthy
+    networks:
+      - meneamebot
 
   nginx:
     restart: always
@@ -24,7 +28,27 @@ services:
       - 443:443
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/nginx/certs:/etc/nginx/certs:ro
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/nginx/conf:/etc/nginx/conf.d:rw
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - meneamebot
+
+  letsencrypt:
+    restart: always
+    hostname: letsencrypt
+    container_name: letsencrypt
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    environment:
+      NGINX_PROXY_CONTAINER: nginx
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/nginx/certs:/etc/nginx/certs:rw
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - meneamebot
 
   etcd:
     container_name: milvus-etcd
@@ -42,6 +66,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - meneamebot
 
   minio:
     container_name: milvus-minio
@@ -57,6 +83,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - meneamebot
 
   milvus:
     container_name: milvus
@@ -79,6 +107,8 @@ services:
     depends_on:
       - "etcd"
       - "minio"
+    networks:
+      - meneamebot
 
   mongo:
     restart: always
@@ -93,6 +123,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - meneamebot
 
   ollama:
     image: ollama/ollama:latest
@@ -115,11 +147,31 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - meneamebot
+
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: always
+    ports:
+      - '5000:5000'
+    volumes:
+      - "${DOCKER_VOLUME_DIRECTORY:-.}/volumes/registry/certs:/certs:ro"
+      - "${DOCKER_VOLUME_DIRECTORY:-.}/volumes/registry/conf:/etc/docker/registry:ro"
+      - "${DOCKER_VOLUME_DIRECTORY:-.}/volumes/registry/storage:/var/lib/registry:rw"
+    networks:
+      - meneamebot
 
 volumes:
   vhost:
-  html: 
+  html:
 
 networks:
-  default:
+  meneamebot:
     name: meneamebot
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1

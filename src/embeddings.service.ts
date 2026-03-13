@@ -7,7 +7,7 @@ export class EmbeddingsService {
   private embeddings: OllamaEmbeddings;
   constructor() {
     this.embeddings = new OllamaEmbeddings({
-      model: "bge-m3",
+      model: process.env.OLLAMA_EMBEDDINGS,
       dimensions: 1024,
       baseUrl: process.env.OLLAMA_HOST
     });
