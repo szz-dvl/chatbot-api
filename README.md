@@ -36,6 +36,7 @@
   ```
     docker compose up -d
   ```
+  Nota: Para generar la cache de modelos de CLIP podeis usar ```npm run models:cache``
 
   Cuando este listo, instalamos los modelos necesitamos de ollama:
 
