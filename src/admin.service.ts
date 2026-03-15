@@ -32,8 +32,6 @@ export class AdminService {
     if (summaryResult.err) {
       return summaryResult;
     }
-
-    console.log(summaryResult)
     
     const dbDocs: DbDoc[] = [];
 

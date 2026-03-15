@@ -13,6 +13,8 @@ services:
           condition: service_healthy
       milvus:
           condition: service_healthy
+      ollama:
+          condition: service_healthy
 
   nginx:
     restart: always
@@ -113,7 +115,7 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: ["CMD", "ollama", "ps"]
       interval: 30s
       timeout: 10s
       retries: 3

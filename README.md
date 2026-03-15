@@ -38,7 +38,7 @@
   ```
   Nota: Para generar la cache de modelos de CLIP podeis usar ```npm run models:cache``
 
-  Cuando este listo, instalamos los modelos necesitamos de ollama:
+  Cuando este listo, instalamos los modelos que necesitamos de ollama:
 
   ``` 
     docker exec ollama ollama pull qwen3:14b
