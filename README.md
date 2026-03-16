@@ -1,6 +1,6 @@
 # MeneameBot
 
-  Esto es un sistemna RAG (Retrieval augmented generation) para [meneame.net](https://meneame.net). La forma de interactuar con el sistema es a través de un chat bot, al que alimentaremos con los resultados de la búsqueda en una BBDD vectorial ([milvus](https://milvus.io/)) que almacenará las noticias publicadas en meneame.net. El sistema usa qwen3:14b (de Alibaba) cómo LLM para implementar el chatbot, [bge-m3](https://huggingface.co/BAAI/bge-m3) (de BAAI) para obtener embeddings de texto y [CLIP](https://openai.com/index/clip/) (de OpenAI) para obtener embeddings de las imágenes.
+  Esto es un sistemna RAG (Retrieval augmented generation) para [meneame.net](https://meneame.net). La forma de interactuar con el sistema es a través de un chat bot, al que alimentaremos con los resultados de la búsqueda en una BBDD vectorial ([milvus](https://milvus.io/)) que almacenará las noticias publicadas en meneame.net. El sistema usa [qwen3:14b](https://qwen-3.com/en) (de Alibaba) cómo LLM para implementar el chatbot, [bge-m3](https://huggingface.co/BAAI/bge-m3) (de BAAI) para obtener embeddings de texto y [CLIP](https://openai.com/index/clip/) (de OpenAI) para obtener embeddings de las imágenes.
 
 ## Entorno
 
@@ -12,7 +12,6 @@
     MONGO_CONNECTION_STRING=mongodb://user:password@localhost:27017/
     MONGO_DB_NAME=meneame
     OLLAMA_HOST=http://ollama:11434
-    OLLAMA_EMBEDDINGS=bge-m3
   ```
 
 ## Instalación

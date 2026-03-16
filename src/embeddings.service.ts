@@ -13,7 +13,7 @@ export class EmbeddingsService {
   async getEmbeddings(text: string): Promise<Result<number[], Error>> {
     try {
       const { embeddings } = await this.ollama.embed({
-        model: process.env.OLLAMA_EMBEDDINGS!,
+        model: "bge-m3",
         input: text
       })
 
