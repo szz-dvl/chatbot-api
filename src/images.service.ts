@@ -5,7 +5,7 @@ import {
   CLIPTextModelWithProjection,
   CLIPVisionModelWithProjection,
   RawImage,
-} from "@xenova/transformers";
+} from "@huggingface/transformers";
 import { Err, Ok, Result } from "ts-results";
 
 @Injectable()

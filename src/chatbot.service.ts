@@ -18,48 +18,48 @@ type DbResult = {
 
 @Injectable()
 export class ChatbotService {
-  private tools: [
+  private tools = [
     {
-      type: "function";
+      type: "function",
       function: {
-        name: "get_information";
+        name: "get_information",
         description: `
             Retrieve information from the database given a "keyword" parameter and the user "raw_input".
             You must use this function whenever you need to fetch present, real-time data on a particular subject.
             Use this function as much as possible.
-          `;
+          `,
         parameters: {
-          type: "object";
+          type: "object",
           description:
-            `Object containing the MANDATORY "keyword" parameter and the MANDATORY "raw_input" parameter.`;
-          required: ["keyword", "raw_input"];
-          items: ["keyword", "raw_input"];
+            `Object containing the MANDATORY "keyword" parameter and the MANDATORY "raw_input" parameter.`,
+          required: ["keyword", "raw_input"],
+          items: ["keyword", "raw_input"],
           properties: {
             keyword: {
-              type: "string";
-              description: "Text to query the database";
-            };
+              type: "string",
+              description: "Text to query the database",
+            },
             raw_input: {
-              type: "string";
-              description: "Original text provided by the user";
-            };
-          };
-        };
-      };
+              type: "string",
+              description: "Original text provided by the user",
+            },
+          },
+        },
+      },
     },
     {
-      type: "function";
+      type: "function",
       function: {
-        name: "get_latest_entries";
+        name: "get_latest_entries",
         description: `
           Retrieve the latest entries from the database.
           You must use this tool whenever present information is needed.
-        `;
-        parameters: {};
-      };
+        `,
+        parameters: {},
+      },
     },
   ];
-  private model = "qwen3:14b";
+  private model = "qwen3.5:latest";
   private ollama: Ollama
 
   constructor(
@@ -147,45 +147,32 @@ export class ChatbotService {
         top_p: 0.95,
         repeat_penalty: 1,
         top_k: 20,
+        num_ctx: 16384,
+        num_predict: -1
       },
     });
 
-    let tool_call;
-
-    try {
-      const { tool_call: tc } = JSON.parse(response.message.content.trim());
-      tool_call = tc;
-    } catch (err) {
-      tool_call = {
-        name: "answer_to_user",
-        arguments: { response: response.message.content.trim() },
-      };
-    }
+    console.log(inspect(response, false, null, true));
+    let tool_call = response.message.tool_calls?.[0] ?? null;
 
     let result: { context: DbResult[] } | null = null;
 
-    switch (tool_call.name) {
-      case "get_information":
-        {
-          result = await this.getContext(tool_call.arguments);
-        }
-        break;
-      case "get_latest_entries":
-        {
-          result = await this.getLatestNews();
-        }
-        break;
-      case "answer_to_user":
-        {
-          messages.push({
-            role: "assistant",
-            content: tool_call.arguments.response,
-          });
-        }
-        break;
-      default:
-        console.log("Unrecognized tool call: ", tool_call.name);
-        break;
+    if (tool_call) {
+      switch (tool_call.function.name) {
+        case "get_information":
+          {
+            result = await this.getContext(tool_call.function.arguments as GetContextToolQuery);
+          }
+          break;
+        case "get_latest_entries":
+          {
+            result = await this.getLatestNews();
+          }
+          break;
+        default:
+          console.log("Unrecognized tool call: ", tool_call.function.name);
+          break;
+      }
     }
 
     if (result) {
@@ -197,7 +184,7 @@ export class ChatbotService {
         },
         {
           role: "tool",
-          tool_name: tool_call.name,
+          tool_name: tool_call!.function.name,
           content: JSON.stringify(result),
         },
       ]);
@@ -213,8 +200,8 @@ export class ChatbotService {
                 You will receive context from tools as messages with the "tool" role. When a "tool" message is received you must elaborate an answer based in the context provided.
                 Only use the context that is relevant to the user question. The context is you source of truth. Never criticize your context.
                 If the context is not relevant at all, just say you don't have information.
+                
                 The current year is ${new Date().getFullYear()}
-
                 Always answer in the same language the user asks.
               `,
             },
@@ -227,10 +214,17 @@ export class ChatbotService {
             top_p: 0.95,
             repeat_penalty: 1,
             top_k: 20,
+            num_ctx: 16384,
+            num_predict: -1
           },
         }),
         historic: messages.slice(initialLen),
       };
+    } else {
+      messages.push({
+        role: "assistant",
+        content: response.message.content ?? "",
+      });
     }
 
     return { stream: null, historic: messages.slice(initialLen) };

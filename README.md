@@ -1,6 +1,6 @@
 # MeneameBot
 
-  Esto es un sistemna RAG (Retrieval augmented generation) para [meneame.net](https://meneame.net). La forma de interactuar con el sistema es a través de un chat bot, al que alimentaremos con los resultados de la búsqueda en una BBDD vectorial ([milvus](https://milvus.io/)) que almacenará las noticias publicadas en meneame.net. El sistema usa [qwen3:14b](https://qwen-3.com/en) (de Alibaba) cómo LLM para implementar el chatbot, [bge-m3](https://huggingface.co/BAAI/bge-m3) (de BAAI) para obtener embeddings de texto y [CLIP](https://openai.com/index/clip/) (de OpenAI) para obtener embeddings de las imágenes.
+  Esto es un sistemna RAG (Retrieval augmented generation) para [meneame.net](https://meneame.net). La forma de interactuar con el sistema es a través de un chat bot, al que alimentaremos con los resultados de la búsqueda en una BBDD vectorial ([milvus](https://milvus.io/)) que almacenará las noticias publicadas en meneame.net. El sistema usa [qwen3.5:9b](https://qwen-3.com/en) (de Alibaba) cómo LLM para implementar el chatbot, [bge-m3](https://huggingface.co/BAAI/bge-m3) (de BAAI) para obtener embeddings de texto y [CLIP](https://openai.com/index/clip/) (de OpenAI) para obtener embeddings de las imágenes.
 
 ## Entorno
 
@@ -40,20 +40,20 @@
   Cuando este listo, instalamos los modelos que necesitamos de ollama:
 
   ``` 
-    docker exec ollama ollama pull qwen3:14b
-    docker exec ollama ollama pull bge-m3:latest
+    docker compose exec ollama ollama pull qwen3.5:latest
+    docker compose exec ollama ollama pull bge-m3:latest
   ```
 
   La máquina que aloje este aplicativo debe apuntar a meneame.bot. Con los modelos listos ejecutamos un par de scripts:
 
   ```
-    docker exec meneamebot node scripts/recreate_index.js
+    docker compose exec meneamebot node scripts/recreate_index.js
   ```
 
    Este primero no logueará nada en la consola.
 
   ```
-    docker exec meneamebot node scripts/index_many.js -s 1 -e 10
+    docker compose exec meneamebot node scripts/index_many.js -s 1 -e 10
   ```
 
   Este segundo irá informando cada 3 páginas de ingesta. ¡¡Usad este script con cautela!! hará una petición a meneame para cáda página que importemos.

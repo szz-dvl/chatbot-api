@@ -51,6 +51,8 @@ COPY ./models_cache ./models_cache
 
 COPY ./dist/ ./
 
+COPY ./client/ ./client
+
 ARG ENV=./.env
 COPY $ENV ./.env
 
