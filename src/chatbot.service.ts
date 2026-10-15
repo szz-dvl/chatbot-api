@@ -152,7 +152,6 @@ export class ChatbotService {
       },
     });
 
-    console.log(inspect(response, false, null, true));
     let tool_call = response.message.tool_calls?.[0] ?? null;
 
     let result: { context: DbResult[] } | null = null;
