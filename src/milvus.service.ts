@@ -125,7 +125,7 @@ export class MilvusService {
         created: true,
       });
     } catch (err) {
-      return Err(err);
+      return Err(err as Error);
     }
   }
 
@@ -170,7 +170,7 @@ export class MilvusService {
         insertResult,
       );
     } catch (err) {
-      return Err(err);
+      return Err(err as Error);
     }
   }
   async hybridSearch(
