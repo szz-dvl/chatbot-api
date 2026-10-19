@@ -103,11 +103,15 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
+    privileged: true
+    devices:
+      - /dev:/dev 
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_ORIGINS=*
+      - OLLAMA_NUM_PARALLEL=1
     deploy:
       resources:
         reservations:
